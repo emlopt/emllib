@@ -17,6 +17,8 @@ The EML technique has been originally designed by [the Artificial Intelligence g
 
 The repository has been just launched and currently contains only a fraction of the existing techniques related to EML. In particular, we have published the bare minimum to support the EML tutorial at IJCAI 2018, and the current documentation is very scarce. More content (and improved documentation) will be released in the coming months.
 
+The EMLlib is part of the EML resources (including the EML tutorial), all available at [http://emlopt.github.io](http://emlopt.github.io).
+
 ## Structure and Installation
 
 In details, every object in the EMLlib belongs to one of three groups:
