@@ -53,20 +53,20 @@ We are planning to add a pip based installation in the coming months.
 
 ### Installing the Keras Network Reader
 
-A reader for Neural Networks built with the [keras sequential API](???) is provided in `net.reader.keras_reader`.
+A reader for Neural Networks built with the [keras sequential API](https://keras.io/models/sequential/) is provided in [`net.reader.keras_reader`](net/reader/keras_reader.py).
 
-The reader itself does not require a specific installation, but you will need to install [keras](???) to make it work.
+The reader itself does not require a specific installation, but you will need to install [keras](https://keras.io/) to make it work.
 
 ### Installing the Sklearn Decision Tree Reader
 
-A reader for Decision Trees built with the [scikit-learn](???) is provided in `tree.reader.sklearn_reader`.
+A reader for [scikit-learn Decision Trees](http://scikit-learn.org/stable/modules/tree.html) is provided in [`tree.reader.sklearn_reader`](tree/reader/sklearn_reader.py).
 
-The reader itself does not require a specific installation, but you will need to install [scikit-learn](???) to make it work.
+The reader itself does not require a specific installation, but you will need to install [scikit-learn](http://scikit-learn.org/) to make it work.
 
 
 ### Installing the Cplex Backend
 
-A backend for the [CPLEX Mixed Integer Linear Solver]() is provided in `backend.cplex_backend`.
+A backend for the [CPLEX Mixed Integer Linear Solver](https://www.ibm.com/analytics/cplex-optimizer) is provided in [`backend.cplex_backend`](backend/cplex_backend.py).
 
-The backend itself does not require a specific installation, but you will need to install [docplex](???) to make it work.
+The backend itself does not require a specific installation, but you will need to install [docplex](https://pypi.org/project/docplex/) to make it work.
 
