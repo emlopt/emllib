@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import numpy as np
 
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from eml.tree import describe
@@ -7,9 +8,26 @@ from eml.tree import describe
 
 # give one of feature_list or feature_dict to map it to the names
 def read_sklearn_tree(tree):
+    """ Import decision tree model from sklearn
+
+    Casts decision tree into custom representation, available at
+    :obj:`eml.tree.describe.DTNode`
+
+    Parameters
+    ----------
+        tree : :obj:`sklearn.tree.BaseDecisionTree`
+            Trained decision tree
+
+    Returns
+    -------
+        Decision tree : :obj:`eml.tree.describe.DTNode`
+            Decision tree with custom representation
+
+    """ 
     return _sklearn_tree_export(tree.tree_, 0, None)
 
 def _sklearn_tree_export(tree, nid, dtParent):
+    # TODO
     # Build a node object
     root = None if dtParent is None else dtParent._root
     dtMe = describe.DTNode(root)
@@ -29,7 +47,8 @@ def _sklearn_tree_export(tree, nid, dtParent):
     # ------------------------------------------------------------------------
     # If there are children, configure the branch related fields
     aname = tree.feature[nid] #str(tree.feature[nid])
-    atype = describe.DTNode.attr_num
+    # atype = describe.DTNode.attr_num
+    atype = 0
     label_left = (-float('inf'), tree.threshold[nid])
     label_right = (tree.threshold[nid], float('inf'))
     # Then process the children

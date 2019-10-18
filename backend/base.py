@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 class Backend(object):
-    """docstring for SolverWrapper"""
+    """ CP Solver Wrapper """
     def __init__(self):
         super(Backend, self).__init__()
 

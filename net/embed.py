@@ -51,6 +51,35 @@ importlib.reload(util)
 
 
 def encode(bkd, net, mdl, net_in, net_out, name, verbose=0):
+    """ Encodes the network in the optimization model.
+
+    Codifies each neuron as a variable in the combinatorial problem,
+    while each edge is considered as a constraint on the the neurons 
+    connected.
+
+    Parameters
+    ----------
+        bkd : :obj:`eml.backend.cplex_backend.CplexBackend`
+            Backend Cplex
+        net : :obj:`eml.net.describe.DNRNet`
+            Network to embed
+        mdl : :obj:`docplex.mp.model.Model`  
+            Model CPLEX
+        net_in : list(:obj:`docplex.mp.linear.Var`) 
+            Input continuous varibles
+        net_out : :obj:`docplex.mp.linear.Var` 
+            Output continuous varibles
+        name : string
+            Name of the network 
+        verbose : int
+            If higher than 0 notifies every neuron embeded
+
+    Returns
+    -------
+        Descriptor : :obj:`eml.util.ModelDesc`
+            Descriptor of the neural network 
+
+    """ 
     # Scalar to vector output
     try:
         len(net_out)
@@ -77,6 +106,25 @@ def encode(bkd, net, mdl, net_in, net_out, name, verbose=0):
 
 
 def _add_neuron(bkd, desc, neuron, x=None):
+    """ Add one neuron to the backend
+
+    Parameters
+    ----------
+        bkd : :obj:`eml.backend.cplex_backend.CplexBackend`
+            Backend CPLEX
+        desc : :obj:`eml.util.Modeldesc`
+            Model descriptor 
+        neuron : :obj:`eml.net.describeDNRNeuron`
+            Neuron to add
+        x : :obj:`docplex.mp.linear.Var`
+            Variable representing the neuron (default None)
+    
+    Raises
+    ------
+        ValueError
+            If the activation function is not supported
+
+    """
     # Preliminary checks
     if neuron.network() != desc.ml_model():
         raise ValueError('The neuron does not belong to the correct network')
@@ -115,7 +163,7 @@ def _add_neuron(bkd, desc, neuron, x=None):
         # Introduce the csts and vars for the activation function
         # ----------------------------------------------------------------
         act = neuron.activation()
-        if act == 'relu':
+        if act == 'relu': 
             ylb, yub = neuron.ylb(), neuron.yub()
             # Trivial case 1: the neuron is always active
             if ylb >= 0:

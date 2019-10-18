@@ -10,14 +10,59 @@ import docplex.mp.model as cpx
 from eml.backend import base
 
 class CplexBackend(base.Backend):
+    """ Backend for CPLEX solver
+
+    Attributes
+    ---------
+        _ml_tol  : float
+            Tollerance 
+
+    Parameters
+    ----------
+        ml_tol :float)
+            Tollerance
+
+    """
     def __init__(self, ml_tol=1e-4):
         self._ml_tol = ml_tol
         super(CplexBackend, self).__init__()
 
     def const_eps(self, mdl):
+        """ Get tollerance
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+
+        Returns
+        -------
+            Tollerance : float
+                Tollerance 
+
+        """ 
         return self._ml_tol
 
     def var_cont(self, mdl, lb, ub, name=None):
+        """ Creates continuous variable in the model 
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            lb : float)
+                Lower bound of the variable 
+            ub :float
+                Upper bound of the variable 
+            name : string 
+                Name of the variable (default None)
+
+        Returns
+        -------
+            Continuos Variable : :obj:`docplex.mp.linear.Var``
+                Continuos variable with specified bounds and name
+
+        """
         # Convert bounds in a cplex friendly format
         lb = lb if lb != -float('inf') else -mdl.infinity()
         ub = ub if ub != float('inf') else mdl.infinity()
@@ -25,35 +70,214 @@ class CplexBackend(base.Backend):
         return mdl.continuous_var(lb=lb, ub=ub, name=name)
 
     def var_bin(self, mdl, name=None):
+        """ Creates continuous variable in the model
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            name : string)
+                Name of the variable (default None)
+
+        Returns
+        ------- 
+            Binary Variable : :obj:`docplex.mp.linear.Var``
+                Binary Variable
+
+        """
         return mdl.binary_var(name=name)
 
     def xpr_scalprod(self, mdl, coefs, terms):
+        """ Scalar product of varibles and coefficients
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            coefs : list(float)
+                List of coefficients 
+            terms : list(:obj:docplex.mp.linear.Var]): 
+                List of variables
+
+        Returns
+        -------
+            Linear Expression : :obj:`docplex.mp.LinearExpr()`
+                Linear expression representing the linear combination 
+                of terms and coefficients or 0
+
+        """
         return sum(c * x for c, x in zip(coefs, terms))
 
     def xpr_sum(self, mld, terms):
+        """ Sum of variables 
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            terms : list(:obj:docplex.mp.linear.Var)
+                List of variables
+
+        Returns
+        -------
+            Linear Expression : :obj:`docplex.mp.LinearExpr()`
+                Linear expression representing the sum of all
+                the term in input
+
+        """
         return sum(terms)
 
     def xpr_eq(self, mdl, left, right):
+        """ Creates an equality constraint between two variables
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            left : :obj:docplex.mp.linear.Var
+                Variable
+            right : :obj:docplex.mp.linear.Var
+                Variable
+
+        Returns
+        -------
+            Equality constraint : :obj:`docplex.mp.constr.LinearConstraint`
+                Equality contraint between the two variables in input 
+        
+        """
         return left == right
 
     def cst_eq(self, mdl, left, right, name=None):
+        """ Add to the model equality constraint between two variables
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            left : :obj:docplex.mp.linear.Var
+                Variable
+            right : :obj:docplex.mp.linear.Var
+                Variable
+            name : string 
+                Name of the constraint 
+
+        Returns
+        -------
+            Equality constraint : :obj:`docplex.mp.constr.LinearConstraint`
+                Equality contraint between the two variables in input 
+
+
+        """
         return mdl.add_constraint(left == right, ctname=name)
 
     def cst_leq(self, mdl, left, right, name=None):
+        """ Add to the model a lowe or equal constraint between two variables
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            left : :obj:docplex.mp.linear.Var
+                Variable
+            right : :obj:docplex.mp.linear.Var
+                Variable
+            name : string 
+                Name of the constraint 
+
+        Returns
+        -------
+            Lower or equal constraint : :obj:`docplex.mp.constr.LinearConstraint`
+                Lowe or equal contraint between the two variables in input 
+
+
+        """
         return mdl.add_constraint(left <= right, ctname=name)
 
     def cst_indicator(self, mdl, trigger, val, cst, name=None):
+        """ Add an indicator to the model
+
+        An indicator constraint links (one-way) the value of a
+        binary variable to the satisfaction of a linear constraint
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            trigger : :obj:`docplex.mp.Var`
+                Binary Variable 
+            val : int
+                Active value, used to trigger the satisfaction
+                of the constraint
+            cst : :obj:`docplex.mp.constr.LinearConstraint`
+                Linear constraint 
+            name : string 
+                Name of the constraint 
+
+        Returns
+        -------
+            Indicator constraint : :obj:`docplex.mp.constr.IndicatorConstraint`
+                Indicator constraint between the trigger and the linear
+                constraint in input
+
+        """ 
         return mdl.add_indicator(trigger, cst, val, name=name)
 
     def get_obj(self, mdl):
-        sense = 'min' if mdl.is_minimize() else 'max'
+        """ Returns objextive expression 
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+
+        Returns
+        -------
+            Objective and expression : (string, )
+                'min' if the objective function is to be minimized,
+                'max otherwise. 
+                The expression repesenting the objective function
+
+        """
+        sense = 'min' if mdl.is_minimized() else 'max'
         xpr = mdl.get_objective_expr()
         return sense, xpr
 
     def set_obj(self, mdl, sense, xpr):
+        """ Sets the objective function 
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            sense : string 
+                Represents the objective, 'min' or 'max'
+            xpr : 
+                Expression representing the objective function
+
+        Returns
+        -------
+            None
+
+        """
         mdl.set_objective(sense, xpr)
 
     def solve(self, mdl, timelimit):
+        """ Solves the problem
+
+        Parameters
+        -----------
+            mdl : :obj:`docplex.mp.model.Model`
+                            Cplex model 
+            timelimit : int
+                time limit in seconds for the solver
+
+        Returns
+        -------
+            Solution : :obj:`docplex.mp.solution.SolveSolution`
+                A solution if the problem is feasible, the status of the
+                of the solver otherwise
+
+        """
         mdl.set_time_limit(max(1, timelimit))
         res = mdl.solve()
         stime = mdl.solve_details.time
@@ -196,6 +420,21 @@ class CplexBackend(base.Backend):
     #     return ttime, bchg
 
     def new_model(self, mdl=None, name=None):
+        """ Creates a new model 
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model (default None)
+            name : string
+                Name of the model (default None)
+
+        Returns
+        -------
+            Model : :obj:`docplex.mp.model.Model`
+                Cplex model
+
+        """
         return cpx.Model()
 
     # def set_model(self, mdl=None):
@@ -223,12 +462,25 @@ class CplexBackend(base.Backend):
 
 
 def model_to_string(mdl):
+    """ Returns a string representing the model
+    
+    Parameters
+    ---------- 
+        mdl : :obj:`docplex.mp.model.Model`
+            Cplex model
+
+    Returns
+    -------
+        Representation : string
+            String representig the cplex model 
+
+    """
     s = ''
     # Print objective
-    if mdl.is_minimize():
-        s += 'minimize: %s\n' % mdl.get_objective_expr()
+    if mdl.is_minimized():
+        s += 'minimized: %s\n' % mdl.get_objective_expr()
     else:
-        s += 'maximize: %s\n' % mdl.get_objective_expr()
+        s += 'maximized: %s\n' % mdl.get_objective_expr()
     # Print all constraints
     s += 'subject to:\n'
     for cst in mdl.iter_constraints():

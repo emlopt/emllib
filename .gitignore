@@ -1,2 +1,15 @@
-*.pyc
+# folders 
 __pycache__/
+dist/
+build/
+docs/
+eml.egg-info/
+
+# files
+test_*.py
+setup.py
+*.pyc
+.DS_Store
+
+
+

@@ -22,6 +22,21 @@ from eml.net import embed
 # ============================================================================
 
 def ibr_bounds(net):
+    """ Internal Based Reasoning Bounding
+
+    The bounds of the units in the neural network are updated based on the 
+    values evaluated using the activation function
+    
+    Parameteres
+    -----------
+        net : :obj:`eml.net.describe.DNRNet`
+            Neural network of interest 
+
+    Returns 
+    -------
+        None
+
+    """
     # Sequentially process layers
     for lidx, layer in enumerate(net.layers()):
         try:
@@ -31,7 +46,7 @@ def ibr_bounds(net):
                 yub, ylb = nrn.bias(), nrn.bias()
                 for idx, wgt in zip(nrn.connected(), nrn.weights()):
                     prd = net.neuron(idx)
-                    if wgt >= 0:
+                    if wgt >= 0: 
                         yub += wgt * prd.ub()
                         ylb += wgt * prd.lb()
                     else:
@@ -54,6 +69,35 @@ def ibr_bounds(net):
 
 def fwd_bound_tighthening(bkd, net=None, desc=None,
         timelimit=None, skip_layers=None, verbose=0):
+    """ Forward bound tightening via Mixed Integer Linear Programming 
+    
+
+    Parameters
+    ----------
+        bkd : :obj:`eml.backend.cplex_backend.CplexBackend`
+            Cplex backend
+        net : obj:`eml.net.describe.DNRNet`
+            Neural network of interest (default None)
+        desc : :obj:`eml.util.ModelDesc`
+            Model descriptor (default None)
+        timelimit : int
+            Time limit for the process (default None)
+        skip_layer : int
+            Skips bound tightening for the specified layer (default None)
+        verbose : int
+            if higher than 0 prints more info on the process (default 0)
+
+    Returns
+    -------
+        Total time : int 
+            Time used to perform bound tightening by the optimizer
+
+    Raises
+    ------
+        ValueError
+            Neither a model descriptor or a network where given in input
+
+    """
     # Check args
     if (net is None and desc is None) or (net is not None and desc is not None):
         raise ValueError('Either a network or a network model descriptor should be passed ')
@@ -94,13 +138,38 @@ def fwd_bound_tighthening(bkd, net=None, desc=None,
     return ttime
 
 
-def _neuron_bounds(bkd, desc, neuron, timelimit, verbose):
+def _neuron_bounds(bkd, desc, neuron, timelimit):
+    """ Bound tightening for neurons 
+    
+    Parameters
+    ----------
+        bkd : :obj:`eml.backend.cplex_backend.CplexBackend`
+            Cplex backend
+        desc : :obj:`eml.util.ModelDesc`
+            Model Descriptor
+        neuron : obj:`eml.net.describe.DNRNeuron`
+            Neuron of interest
+        timelimit : int
+            Time limit to perform the process
+
+    Returns
+    -------
+        Time Spend : int
+            Time spend performing the bound tightening on the neuron
+            by the optimizer
+
+    Raises
+    ------
+        ValueError
+            Neuron not in the current network 
+
+    """
     # Preliminary checks
     if neuron.network() != desc.ml_model():
         raise ValueError('The neuron does not belong to the correct network')
     # Prepare some data structures
     idx, net = neuron.idx(), neuron.network()
-    ttime, bchg = 0, False
+    ttime = 0
     if issubclass(neuron.__class__, describe.DNRActNeuron):
         act = neuron.activation()
     else:
@@ -163,4 +232,4 @@ def _neuron_bounds(bkd, desc, neuron, timelimit, verbose):
     # --------------------------------------------------------------------
     # Return results
     # --------------------------------------------------------------------
-    return ttime, bchg
+    return ttime
