@@ -437,6 +437,12 @@ class CplexBackend(base.Backend):
         """
         return cpx.Model()
 
+    
+    # def update_lb():
+
+    # def update_ub():
+        
+
     # def set_model(self, mdl=None):
     #     # Clear the current model (if owned)
     #     if self._mdl_owned:

@@ -24,38 +24,81 @@ def read_sklearn_tree(tree):
             Decision tree with custom representation
 
     """ 
-    return _sklearn_tree_export(tree.tree_, 0, None)
+    root = describe.DTNode()
+    return _sklearn_tree_export(tree.tree_, 0, root)
 
-def _sklearn_tree_export(tree, nid, dtParent):
-    # TODO
-    # Build a node object
-    root = None if dtParent is None else dtParent._root
-    dtMe = describe.DTNode(root)
+    """ 
+    IMPORTANT 
+
+    In order to embed a decision tree model we must take into account 
+    the way the thresholds are testes by the model. 
+
+    Example:
+
+        scikit learn tests the threshold for each attribute considering 
+
+            th_1 <= x < th_2
+
+        every time the equality will be tested on the "left" threshold.
+
+        We might have some models, for example Weka, where the equality 
+        test is made on the right side of the range. 
+
+    To make stuff more simple we established a convention for this model, 
+    where the equality test is always considered to be on the left side. 
+    
+    This can be actually achived very easily using the machine epsilon,
+    upper bound on the relative error due to rounding in floating point 
+    arithmetic, by "shifting" the equality test from right to left summing
+    this value
+
+    Example
+
+        let us consider a model where the equality test is made on the right-
+        hand of the range:
+
+            th_1 < x <= th_2
+
+        we can change this as follows
+
+            th_1 + epsilon < x <= th_2 - epsilon    <=>
+
+            <=> th_1 <= x < th_2
+
+    This still needs to be implemented
+    """
+
+
+def _sklearn_tree_export(tree, nid, root):
+    """ COMMENT """
     # ------------------------------------------------------------------------
-    # if is leaf
+    # LEAF
+    # ------------------------------------------------------------------------
     if tree.children_left[nid] < nid:
-        # ... and tree.children_left[node] < node:
         if tree.n_outputs == 1:
-            if tree.n_classes[0] == 1:
-                # regression
+            if tree.n_classes[0] == 1:  # regression
                 val = tree.value[nid][0, 0]
-            else: # classification
+            else:  # classification
                 val = np.argmax(tree.value[nid])
-        dtMe.set_class_label(str(val))
-        # XXX aname, atype?
-        return dtMe
+        root.set_class(val)
+        return root
     # ------------------------------------------------------------------------
-    # If there are children, configure the branch related fields
-    aname = tree.feature[nid] #str(tree.feature[nid])
-    # atype = describe.DTNode.attr_num
-    atype = 0
-    label_left = (-float('inf'), tree.threshold[nid])
-    label_right = (tree.threshold[nid], float('inf'))
-    # Then process the children
-    dt_left = _sklearn_tree_export(tree, tree.children_left[nid], dtMe)
-    dt_right = _sklearn_tree_export(tree, tree.children_right[nid], dtMe)
-    # Finally, attach the converted children to the current node
-    dtMe.add_child(dt_left, aname, atype, label_left)
-    dtMe.add_child(dt_right, aname, atype, label_right)
+    # SPLIT
     # ------------------------------------------------------------------------
-    return dtMe
+    # getting name, type and thresholds of the split
+    attr_name = tree.feature[nid]
+    attr_type = 0
+    range_left = (-float('inf'), tree.threshold[nid])
+    range_right = (tree.threshold[nid], float('inf'))
+    # creating recursively the subtrees
+    child_left = describe.DTNode(attr_name, attr_type, range_left)
+    child_right = describe.DTNode(attr_name, attr_type, range_right)
+    # attaching child
+    root.add_child(child_left)
+    root.add_child(child_right)
+    # creating subtree
+    subtree_left = _sklearn_tree_export(tree, tree.children_left[nid], child_left)
+    subtree_right = _sklearn_tree_export(tree, tree.children_right[nid], child_right)
+
+    return root
+    
