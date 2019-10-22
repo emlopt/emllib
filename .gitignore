@@ -2,11 +2,10 @@
 __pycache__/
 dist/
 build/
-emllib.egg-info
+emllib.egg-info/
 
 # files
 test_*.py
-setup.py
 *.pyc
 .DS_Store
 
