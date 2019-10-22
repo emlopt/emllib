@@ -10,7 +10,7 @@ Welcome to emllib's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+    readme
 
 Indices and tables
 ==================
