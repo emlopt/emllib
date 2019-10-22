@@ -1,34 +1,29 @@
-eml.net package
-===============
-
-Subpackages
------------
+eml.net
+=======
 
 .. toctree::
 
    eml.net.reader
 
-Submodules
-----------
 
-eml.net.describe module
------------------------
+eml.net.describe
+----------------
 
 .. automodule:: eml.net.describe
    :members:
    :undoc-members:
    :show-inheritance:
 
-eml.net.embed module
---------------------
+eml.net.embed
+-------------
 
 .. automodule:: eml.net.embed
    :members:
    :undoc-members:
    :show-inheritance:
 
-eml.net.process module
-----------------------
+eml.net.process
+---------------
 
 .. automodule:: eml.net.process
    :members:

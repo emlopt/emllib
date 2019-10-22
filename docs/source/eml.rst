@@ -1,8 +1,5 @@
-eml package
-===========
-
-Subpackages
------------
+eml
+===
 
 .. toctree::
 
@@ -10,11 +7,9 @@ Subpackages
    eml.net
    eml.tree
 
-Submodules
-----------
 
-eml.util module
----------------
+eml.util
+--------
 
 .. automodule:: eml.util
    :members:

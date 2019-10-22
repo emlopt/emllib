@@ -1,11 +1,8 @@
-eml.tree.reader package
-=======================
+eml.tree.reader
+===============
 
-Submodules
-----------
-
-eml.tree.reader.sklearn\_reader module
---------------------------------------
+eml.tree.reader.sklearn\_reader
+-------------------------------
 
 .. automodule:: eml.tree.reader.sklearn_reader
    :members:

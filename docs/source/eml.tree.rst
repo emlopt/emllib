@@ -1,34 +1,29 @@
-eml.tree package
-================
-
-Subpackages
------------
+eml.tree
+========
 
 .. toctree::
 
    eml.tree.reader
 
-Submodules
-----------
 
-eml.tree.describe module
-------------------------
+eml.tree.describe
+-----------------
 
 .. automodule:: eml.tree.describe
    :members:
    :undoc-members:
    :show-inheritance:
 
-eml.tree.embed module
----------------------
+eml.tree.embed
+--------------
 
 .. automodule:: eml.tree.embed
    :members:
    :undoc-members:
    :show-inheritance:
 
-eml.tree.process module
------------------------
+eml.tree.process
+----------------
 
 .. automodule:: eml.tree.process
    :members:

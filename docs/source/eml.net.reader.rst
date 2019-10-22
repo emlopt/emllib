@@ -1,11 +1,8 @@
-eml.net.reader package
-======================
+eml.net.reader
+==============
 
-Submodules
-----------
-
-eml.net.reader.keras\_reader module
------------------------------------
+eml.net.reader.keras\_reader
+----------------------------
 
 .. automodule:: eml.net.reader.keras_reader
    :members:

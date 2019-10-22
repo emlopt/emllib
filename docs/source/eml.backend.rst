@@ -1,19 +1,16 @@
-eml.backend package
-===================
+eml.backend 
+===========
 
-Submodules
-----------
-
-eml.backend.base module
------------------------
+eml.backend.base
+----------------
 
 .. automodule:: eml.backend.base
    :members:
    :undoc-members:
    :show-inheritance:
 
-eml.backend.cplex\_backend module
----------------------------------
+eml.backend.cplex\_backend
+--------------------------
 
 .. automodule:: eml.backend.cplex_backend
    :members:

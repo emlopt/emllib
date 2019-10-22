@@ -1,15 +1,21 @@
-.. emllib documentation master file, created by
-   sphinx-quickstart on Tue Oct 22 15:48:04 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to emllib's documentation!
+Documentation EMLlib
 ==================================
+
+Contents:
 
 .. toctree::
    :maxdepth: 2
    
     readme
+    eml.backend
+    eml.net
+    eml.net.describe
+    eml.net.reader
+    eml.net.embed
+    eml.tree 
+    eml.tree.describe
+    eml.tree.reader
+    eml.tree.embed
 
 Indices and tables
 ==================
