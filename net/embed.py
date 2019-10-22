@@ -13,7 +13,7 @@ import numpy as np
 # import describe
 # importlib.reload(describe)
 
-from eml.net import describe
+from eml.net import describe, process
 from eml import util
 
 import importlib
@@ -101,6 +101,13 @@ def encode(bkd, net, mdl, net_in, net_out, name, verbose=0):
             else:
                 x = None
             _add_neuron(bkd, desc, neuron, x=x)
+    # Enforce basic input bounds
+    in_layer = net.layer(0)
+    neurons = list(in_layer.neurons())
+    for i, var in enumerate(net_in):
+        neurons[i].update_lb(var.lb)  
+        neurons[i].update_ub(var.ub)  
+    process.ibr_bounds(net)
     # Return the network descriptor
     return desc
 

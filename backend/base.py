@@ -48,3 +48,8 @@ class Backend(object):
     def new_model(self, name=None):
         raise NotImplementedError('This method should be implemented in subclasses')
 
+    # def update_lb(self, bkd, mdl, ml, lb):
+    #     raise NotImplementedError('This method should be implemented in subclasses')
+
+    # def update_ub(self, bkd, mdl, ml, ub):
+    #     raise NotImplementedError('This method should be implemented in subclasses')

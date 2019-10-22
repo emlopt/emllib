@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-import sys
-
-# ===========================================================================
-# Classes to model a decision tree
-# ===========================================================================
-
 class DTNode(object):
     """ Class used to shape decision trees.
 
@@ -14,201 +5,204 @@ class DTNode(object):
     and expanding it. In this project it will be used in order to port 
     decision trees build via scikit-learn (REF TODO).
 
-    Parameters
-    ----------
-        root : DTNode
-            Root node (`default=None`)
+    If the node has no attribute name, type, range and parent this means that
+    the node is the root of a tree.
+
+    Parameter
+    ---------
+        attr_name : string/int
+            Name of the attribute,  (default None)
+        attr_type : int
+            Type of the attribute, either 0 (numeric) or 1 (symbolic), (default None)
+        attr_range : (float, float)
+            Defines the inteval of the split. A split is defined by two ranges
+            one for the left and one for the right, (default None)
+        _class : int
+            Label of the class, if the current node is a leaf (default None)
+
     Attributes
     ----------
-        _root : DTNode
-            Root of the tree
-        _atype : dict
-            Type of the attributes in the tree
-        _albs : dict
-            Lower bounds of the attributes labeling the node 
-        _aubs : dict
-            Lower bounds of the attributes labeling the node 
-        aname : 
-            Name of attributes labeling the node 
-        atype : int
-            Type of the attributes labeling the node (just numeric now)
-        parent : DTNode
-            Parent node, equal to `self` if the node is root
-        branch_label : 
-            Label of the branch 
-        branch_aname : 
-            Branch attribute name
-        branch_atype : 
-            Branch attribute type
-        children : List of DTNode
-            Children of the current node 
-        class_label : int 
+        _attr_name: string/int
+            Name of the attribute
+        _attr_type : int
+            Type of the attribute, either 0 (numeric) or 1 (symbolic)
+        _attr_range : (float, float)
+            Defines the inteval of the split. A split is defined by two ranges
+            one for the left and one for the right
+        _class : int
             Label of the class, if the current node is a leaf
+        _parent : :obj:`eml.tree.describe.DTNode`
+        _children : list(:obj:`eml.tree.describe.DTNode`)
+        thr_left : bool
+            Defines the way the tree parses the intervals (TO BE REMOVED)
+
+    Raises
+    ------
+        ValueError
+            If the given range is not valid
 
     """
-    # attr_num, attr_sym = range(2)
-
-
-    def __init__(self, root=None):
-        self.attr_num = 0
-        self.attr_sym = 1
-        # Attribute type codes
-        # super(DTNode, self).__init__()
-        if root is None:
-            self._root = self
-            self._atypes = {}
-            self._albs = {}
-            self._aubs = {}
+    def __init__(self, attr_name=None, attr_type=None,
+                 attr_range=None, _class=None):
+        self._attr_name = attr_name
+        self._attr_type = attr_type
+        # checking if the attribute is a valid interval
+        if (attr_range is None) or (len(attr_range) == 2 and attr_range[0] < attr_range[1]):
+            self._attr_range = attr_range
         else:
-            self._root = root
-        # init node attributes
-        self.aname = None
-        self.atype = None
-        # parent node
-        self.parent = None
-        # brach attributes
-        self.branch_label = None
-        self.branch_aname = None
-        self.branch_atype = None
-        # list of children
-        self.children = []
-        # define the class label (for leaves only)
-        self.class_label = None
-        # Should the threshold go in the left or right branch?
-        self.thr_left = True # falla secca 
+            raise ValueError('Only numeric attributes are supported',
+                             'the attribute range must be a valid interval')
+        self._parent = None
+        self._children = []
+        self._class = None
+        # if a root is created 
+        if self._attr_name is None:
+            self.attributes_lb = {}
+            self.attributes_ub = {}
+        else:
+            self.attributes_lb = None
+            self.attributes_ub = None
 
-    def add_child(self, node, aname, atype, label):
-        """ Add one child to the node
-        
-        Parameters
-        ----------
-            node : DTNode
-                Node to add in the children list
-            aname : int 
-                Name of the attribute leading from the current node 
-                to the child is being added
-            atype : int 
-                Type of the attribute leading from the current node 
-                to the child is being added
-            label : int
-                Label of the child node if it is a leaf
+    def add_child(self, child): 
+        """ Add a child to the current node
 
-        """
-        # TODO convert the assertions to exceptions
-        # setup the parent-child relationship
-        assert node.parent is None
-        self.children.append(node)
-        node.parent = self
-        # setup the branch labels
-        # assert not node.atype == DTNode.attr_num or len(label) == 2
-        # assert not node.atype == DTNode.attr_num or label[0] < label[1]
-        assert not node.atype == 0 or len(label) == 2
-        assert not node.atype == 0 or label[0] < label[1]
-        node.branch_label = label
-        # setup the branch attribute
-        assert node.parent.aname is None or node.parent.aname == aname
-        node.branch_aname = aname
-        if node.parent.aname is None:
-            node.parent.aname = aname
-        # setup the branch type
-        # assert atype in (DTNode.attr_num, DTNode.attr_sym)
-        assert atype in (0, 1)
-        assert node.parent.atype is None or node.parent.atype == atype
-        node.branch_atype = atype
-        if node.parent.atype is None:
-            node.parent.atype = atype
-        # Store global attribute information in the root
-        root = self._root
-        if aname not in root._atypes:
-            root._atypes[aname]= atype
-            root._albs[aname] = -float('inf')
-            root._aubs[aname] = float('inf')
-
-    def set_class_label(self, class_label):
-        """ Set class label of the current node
+        Updates the list children and adds lower
+        and upper bounds for the child 
+        if not already existing
 
         Parameters
         ----------
-            class_label: int
-                Integer representing the class of the node
+            child : :obj:`eml.tree.describe.DTNode`
+
+        Returns
+        -------
+            child : :obj:`eml.tree.describe.DTNode`
 
         """
-        # can be int (dtree) or float (rtree)
-        self.class_label = eval(class_label)
+        # adding child to children of this node 
+        self._children.append(child)
+        # assign parent to child
+        if child._parent is None:
+            child._parent = self
+        # updating lower and upper bounds
+        if child.attr_name is not None:
+            child.attributes_lb = self.attributes_lb
+            child.attributes_ub = self.attributes_ub
+            if child.attr_name() not in self.attributes_lb.keys():
+                self.attributes_lb[child.attr_name()] = -float('inf')
+                self.attributes_ub[child.attr_name()] = float('inf')
+            
+        return child
+
+    def attr_name(self):
+        """ Get the node's attribute
+
+        Returns the name of the attribute to test
+        in order to reach this node
+
+        Returns
+        -------
+            Name : string/int
+                Name of the attribute
+        """
+        return self._attr_name
+
+    def attr_range(self):
+        """ Get the range of the node's attribute
+
+        Returns the range that the sample's attribute 
+        must respect in order to reach this node
+
+        Returns
+        -------
+            Interval : (float, float)
+                Range of the attribute fo this node
+        """
+        return self._attr_range
+
+    def attr_type(self):
+        """ Get the type of the node's attribute
+
+        Returns the type od the attribute to be tested
+        in order to reach this node, it is either 0 
+        (numeric) or 1 (symbolic)
+        """
+        return self._attr_type
+
+    def get_class(self):
+        """ Get the class label of the current node
+
+        Returns 
+        -------
+            Class label : int 
+                If this is a leaf an integer representing
+                the class, None otherwise
+        """
+        return self._class
+
+    def set_class(self, _class):
+        """ Set the class label
+
+        Parameters
+        ----------
+            _class : int
+                Class label
+
+        Returns
+        -------
+            None
+
+        """
+        self._class = _class
+
+    def get_children(self):
+        """ Get the list of the children of the node
+
+        Returns
+        -------
+            Children : list(:obj:`eml.tree.describe.DTNode`)
+
+        """
+        return self._children
 
     def eval(self, sample):
-        """ Evaluates the output of the DT tree given a input.
+        """ Evalueates a sample 
 
-        Given a sample each attribute of the input is tested according 
-        to the thresholds of each node until a leaf node is reached.
+        Returns the category associated to the sample 
+        in input according to the decision tree
 
         Parameters
         ----------
-            sample:
-                Input sample
+            sample : list(att : value)
+                List of attribute-value 
 
-        Returns
-        ----------
-            Class Label : int 
-                Identifier of the class returned by the decision tree
+        Returns 
+        -------
+            Class : int 
+                Classification of the sample
 
         Raises
-        ----------
+        ------
             ValueError
-                If there are symbolic attributes or inconsistent attributes 
-                are tested
+                If the sample is not well formed 
 
-        """
-        # if the node is a leaf, just return the class
-        if self.class_label is not None:
-            return self.class_label
-        # otherwise, "forward" the sample along one of the branches
-        else:
-            for child in self.children:
-                # process branches for numeric attributes
-                if self.atype == DTNode.attr_num:
-                    vmin, vmax = child.branch_label
-                    #print "vmin "+str(vmin)+", sample "+str(sample)+", max "+str(vma)
-                    if not self.thr_left:
-                        if vmin <= sample[self.aname] < vmax:
-                            return child.eval(sample)
-                    else:
-                        if vmin < sample[self.aname] <= vmax:
-                            return child.eval(sample)
-                else:
-                    msg = 'Symbolic attributes are not yet supported' # TODO
-                    raise ValueError(msg)
-            msg = 'A split on %s does not form a partition' % self.aname
-            raise ValueError(msg)
+        """ 
+        if self._class is not None:
+            return self._class
+        for child in self._children:
+            if self._attr_type == 0:
+                test_attribute = child.get_test_attribute()
+                (tmin, tmax) = child.get_test_range()
+                if tmin <= sample[test_attribute] < tmax:
+                    return child.eval(sample)
+        raise ValueError('Incorrect Sample')
 
-    def __repr__(self):
-        """ Representation of the DRNode
-
-        Returns
-        -------
-            string:
-                Representation of the tree/subtree
-
-        """
-        return _dt_to_string(self)
-
-    def attributes(self):
-        """ Get the list of the attributes in the tree
-
-        Returns
-        -------
-            Attribute : list(int)
-                List of the attributes currently in the tree
-
-        """
-        return self._root._atypes.keys()
-
-    def lb(self, aname):
+    def lb(self, attr_name):
         """ Get lower bound of a attribute
 
         Parameters
         ----------
-            aname : int 
+            attr_ame : int 
                 Name of the attrbute of interest
         
         Returns
@@ -217,14 +211,14 @@ class DTNode(object):
                 Lower bound of the attribute specified in input 
 
         """
-        return self._root._albs[aname]
+        return self.attributes_lb[attr_name]
 
-    def update_lb(self, aname, value, tol=1e-4):
+    def update_lb(self, attr_name, value, tol=1e-4):
         """ Update lower bound of a attribute
         
         Parameters
         ----------
-            aname : int
+            attr_name : int
                 Name of the attrbute of interest
             value : float
                 New lower bound value
@@ -238,19 +232,19 @@ class DTNode(object):
                 False otherwise
 
         """
-        albs = self._root._albs
-        if albs[aname] < value-tol:
-            albs[aname] = value
+        albs = self.attributes_lb
+        if albs[attr_name] < value-tol:
+            self.attributes_lb[attr_name] = value
             return True
         else:
             return False
 
-    def ub(self, aname):
+    def ub(self, attr_name):
         """ Get upper bound of a attribute
 
         Parameters
         ----------
-            aname : int
+            attr_name : int
                 Name of the attrbute of interest
         
         Returns
@@ -259,14 +253,14 @@ class DTNode(object):
                 Upper bound of the attribute specified in input 
 
         """
-        return self._root._aubs[aname]
+        return self.attributes_ub[attr_name]
 
-    def update_ub(self, aname, value, tol=1e-4):
+    def update_ub(self, attr_name, value, tol=1e-4):
         """ Update upper bound of a attribute
         
         Parameters
         ----------
-            aname : int
+            attr_name : int
                 Name of the attrbute of interest
             value : float
                 New upper bound value
@@ -280,127 +274,34 @@ class DTNode(object):
                 False otherwise
 
         """
-        aubs = self._root._aubs
-        if aubs[aname] > value+tol:
-            aubs[aname] = value
+        aubs = self.attributes_ub
+        if aubs[attr_name] > value+tol:
+            self.attributes_ub[attr_name] = value
             return True
         else:
             return False
 
-    def atype(self, aname):
-        """ Get type of a attribute
-
-        Parameters
-        ----------
-            aname : int 
-                Name of the attrbute of interest
-
-        Returns
-        ------- 
-            Attribute Type : int 
-                Type of the attribute specified 
-
-        """
-        return self._root._atypes[aname]
-
-    def reset_bounds(self):
-        """ Resets upper and lower bound for each attribute
-
-        The lower and upper bound are setted respectively to 
-        -inf and inf for each attribute in the tree.
-
-        Returns
-        -------
-            None
-
-        """
-        for aname in self._root._atypes:
-            self._root._albs[aname] = -float('inf')
-            self._root._aubs[aname] = float('inf')
-
-    def nsplits(self):
-        """ Get number of splits in the tree.
-
-        Returns
-        -------
-            Number of splits : int 
-                Number of splits in the tree
-        """
-        cnt = 0
-        if self.branch_aname is not None:
-            # not the (fake) root
-            cnt += 1
-        #if self.class_label != None:
-        #    # a leaf, also count the class
-        #    cnt += 1
-        # process the children
-        for child in self.children:
-            cnt += child.size()
-        return cnt
+    def __repr__(self):
+        res = ""
+        for child in self.get_children():
+            res += _aux(child, 0, "")
+        return res
 
 
-def _dt_to_string(tree, level=0, use_ref_lbl=False):
-    """ Creates a string representing the tree
-
-    TODO description representation
-
-    Parameters
-    ---------- 
-        level : int 
-            Starting level of the rappresentation. If 0 starts
-            from the root.
-        use_ref_lbl : bool
-            Flag for refined class label in the representation
-
-    Returns
-    -------
-        Representation : string 
-            Representing the tree
-
-    Raises
-    ------
-        ValueError
-            If the label has a type not supported
-
-    """ 
-    # print level indicators
-    res = '|   ' * (level-1)
-    # ------------------------------------------------------------------------
-    # print branch information
-    if tree.branch_aname is not None:
-        # print the attribute name
-        res += 'attr_%d' % tree.branch_aname
-        # print the split condition
-        label = tree.branch_label if not use_ref_lbl else tree.refined_label
-        if isinstance(label, tuple):
-            if label[0] == -float('inf'):
-                if not tree.thr_left:
-                    res += ' < %f' % label[1]
-                else:
-                    res += ' <= %f' % label[1]
-            else:
-                if not tree.thr_left:
-                    res += ' >= %f' % label[0]
-                else:
-                    res += ' > %f' % label[0]
-        elif isinstance(label, list) or isinstance(label, set):
-            res += ' in (' + ' '.join(str(v) for v in sorted(label)) + ')'
-        else:
-            msg = 'Unrecognized label type'
-            raise ValueError(msg)
-    # ------------------------------------------------------------------------
-    # print the class information
-    if tree.class_label != None:
-        if not use_ref_lbl:
-            res += (': %s\n' % tree.class_label)
-        else:
-            res += (': %d\n' % tree.refined_class_label)
+def _aux(node, level, res):
+    res = '|   ' * (level)
+    class_ = node.get_class()
+    res += 'attr_%s' % str(node.attr_name())
+    range_ = node.attr_range()
+    if range_[0] == -float('inf'):
+        res += ' <= %f' % range_[1]
     else:
-        res += '\n' if level > 0 else ''
-    # ------------------------------------------------------------------------
-    # process the children
-    for child in tree.children:
-        res += _dt_to_string(child, level+1, use_ref_lbl)
-    # ------------------------------------------------------------------------
-    # return the string
+        res += ' > %f' % range_[0]
+    if class_ is not None:  
+        res += (': %s\n' % str(node.get_class()))
+    else: 
+        res += '\n' if level >= 0 else ''
+    for child in node.get_children():
+        res += _aux(child, level+1, res)
     return res
+    

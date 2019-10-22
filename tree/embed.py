@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from eml import util
+from eml.tree.describe import DTNode
 
 # ===========================================================================
 # Utility functions
 # ===========================================================================
 
-def _extract_rules(tree):
+def _extract_rules(root):
     """ Transforms the decistion tree into a set of rules
 
     Every rule represents a path from the root to a leaf. 
@@ -17,7 +18,7 @@ def _extract_rules(tree):
 
     Parameters
     ---------
-        tree : :obj:`eml.tree.describe.DTNode`
+        root : :obj:`eml.tree.describe.DTNode`
             Decision tree, build using sklearn
 
     Returns
@@ -26,24 +27,24 @@ def _extract_rules(tree):
             List containing all the possible paths leading from the root to a leaf
 
     """
-    # build a descriptor for the condition associated to this branch
-    if tree.branch_aname is not None:
-        # print(tree.branch_aname, tree.branch_atype, tree.branch_label)
-        base = [(tree.branch_aname, tree.branch_atype, tree.branch_label)]
-    else:
-        base = [] # no base if there is no branch
-    # if the node is a class, end the rule with a "head"
-    if tree.class_label is not None:
-        return [base + [tree.class_label]]
-    # otherwise, extend all the rules returned by the children
-    else:
-        my_rules = []
-        for child in tree.children:
-            child_rules = _extract_rules(child)
-            for rule in child_rules:
-                my_rules.append(base + rule)
-        return my_rules
+    ris = []
+    for child in root.get_children():
+        ris += _aux(child)
+    return ris
 
+
+def _aux(node):
+    base = [(node.attr_name(), node.attr_type(), node.attr_range())]
+    if node.get_class() is not None:
+        return [base + [node.get_class()]]
+    else:
+        ris = []
+        for child in node.get_children():
+            child_rules = _aux(child)
+            for rule in child_rules:
+                ris.append(base + rule)
+    return ris
+        
 
 # ===========================================================================
 # Backward encoding
@@ -87,15 +88,6 @@ def encode_backward_implications(bkd, tree, mdl, tree_in, tree_out, name):
     # obtain the decision tree in rule format
     rules = _extract_rules(tree)
     nrules = len(rules)
-    # Quick argument check
-    if not tree.thr_left: # what does this mean?
-        raise ValueError('Trees where the threshold goes in the right branch are not yet supported')
-    try:
-        if len(tree_out) > 1:
-            raise ValueError('Trees with vector output are not yet supported')
-        tree_out = tree_out[0]
-    except:
-        pass
     # ------------------------------------------------------------------------
     # Introduce a binary variable for each rule
     Z = []
@@ -133,38 +125,24 @@ def encode_backward_implications(bkd, tree, mdl, tree_in, tree_out, name):
             if (aname, th1, th2) in built:
                 continue
             # Identify all rules that are based on this condition
-            # TODO this should work with implied rules, too
+            # Should work with implied rules, too
             # impl = [k for k, cr in enumerate(crules) if
             #         aname in cr and
-            #         cr[aname][0] <= th1 and th2 <= cr[aname][1]]
+            #         cr[aname][0] <= th1 and th2 < cr[aname][1]]
             based = [k for k, cr in enumerate(crules) if
-                    aname in cr and
-                    th1 <= cr[aname][0]and cr[aname][1] <= th2]
-            # based = [k for k, cr in enumerate(rules) if
-            #         aname in cr and
-            #         cr[aname][0] == th1 and th2 == cr[aname][1]]
-            # print aname, th1, th2
-            # print [crules[k][aname] for k in based]
-            # Post a constraint
-            # print('-' * 30)
-            # print(aname, atype, (th1, th2))
-            # print(based)
+                     aname in cr and
+                     th1 <= cr[aname][0] and cr[aname][1] < th2]
             if th2 != float('inf'):
                 M = tree.ub(aname)
                 th = th2
                 coefs = [1] + [M - th] * len(based)
                 terms = [tree_in[aname]] + [Z[k] for k in based]
-                # terms = [Z[k] for k in based]
                 cst = bkd.cst_leq(mdl, bkd.xpr_scalprod(mdl, coefs, terms), M)
-                # print(cst)
             if th1 != -float('inf'):
                 m = tree.lb(aname)
                 th = th1 + bkd.const_eps(mdl)
                 coefs = [1] + [m - th] * len(based)
                 terms = [tree_in[aname]] + [Z[k] for k in based]
-                # terms = [Z[k] for k in based]
                 cst = bkd.cst_geq(mdl, bkd.xpr_scalprod(mdl, coefs, terms), m)
-                # print(cst)
-            # raise RuntimeError('BABOON!')
     # Return the descriptor
     return desc
