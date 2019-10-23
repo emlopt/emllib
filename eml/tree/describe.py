@@ -8,8 +8,8 @@ class DTNode(object):
     If the node has no attribute name, type, range and parent this means that
     the node is the root of a tree.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
         attr_name : string/int
             Name of the attribute,  (default None)
         attr_type : int

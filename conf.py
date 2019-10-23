@@ -14,7 +14,7 @@ import os
 import sys
 # import sphinx_ops_theme
 
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
@@ -128,7 +128,9 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+# html_sidebars = {
+#         '**': ['readme.html']
+#     }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -167,3 +169,14 @@ def setup(app):
     app.add_stylesheet('theme_overrides.css')
 
 
+latex_documents = [
+  ('index'),
+]
+
+man_pages = [
+    ('index')
+]
+
+texinfo_documents = [
+  ('index'),
+]

@@ -966,8 +966,8 @@ class DNRDense(DNRActLayer):
 
     def evaluate(self, data):
         """ Evalueates the output of the layer given a input
-        
-        Parameteres
+
+        Parameters
         -----------
             data : list(float) 
                 Input for the layer

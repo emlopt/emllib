@@ -1,0 +1,146 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>EMLlib - An Empirical Model Learning Library &#8212; Empirical Model Learning  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Empirical Model Learning’s documentation!" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Empirical Model Learning’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Empirical Model Learning  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="emllib-an-empirical-model-learning-library">
+<h1>EMLlib - An Empirical Model Learning Library<a class="headerlink" href="#emllib-an-empirical-model-learning-library" title="Permalink to this headline">¶</a></h1>
+<p>This repository contains an implementation of techniques related to [Empirical Model Learning](<a class="reference external" href="http://emlopt.github.io">http://emlopt.github.io</a>), a technique to enable Combinatorial Optimization and decision making over complex real-world systems. The method is based on the (relatively simple) idea of:</p>
+<ol class="arabic simple">
+<li>Using a Machine Learning (ML) model to approximate the input/output behavior of a system that is hard to model by conventional means.</li>
+<li>Embedding such _Empirical <a href="#id1"><span class="problematic" id="id2">Model_</span></a> into a Combinatorial Optimization model.</li>
+</ol>
+<p>The emphasis of EML is mostly on the techniques to perform the embedding. These should be designed so that the optimization engine can exploit the structure of the empirical model to boost the search process.</p>
+<p>This repository includes:</p>
+<ul class="simple">
+<li>Actual embedding techniques (encodings and global constraints)</li>
+<li>Pre- and post- processing methods</li>
+<li>I/O support (in particular readers for popular ML libraries)</li>
+</ul>
+<p>The EML technique has been originally designed by [the Artificial Intelligence group of the University of Bologna](<a class="reference external" href="http://ai.unibo.it">http://ai.unibo.it</a>), but the repository implements also contributions from other groups.</p>
+<p>The repository has been just launched and currently contains only a fraction of the existing techniques related to EML. In particular, we have published the bare minimum to support the EML tutorial at IJCAI 2018, and the current documentation is very scarce. More content (and improved documentation) will be released in the coming months.</p>
+<p>The EMLlib is part of the EML resources (including the EML tutorial), all available at [<a class="reference external" href="http://emlopt.github.io](http://emlopt.github.io">http://emlopt.github.io](http://emlopt.github.io</a>).</p>
+<p>## Structure and Installation</p>
+<p>In details, every object in the EMLlib belongs to one of three groups:</p>
+<ul class="simple">
+<li><em>Core EML objects</em> are the classes and functions that implement the main EML functionalities, such as encodings, pre- and post-processing methods</li>
+<li><em>Backends</em> provide the interface the core EML objects with a specific optimization solver</li>
+<li><em>Readers</em> allow to convert Machine Learning models built via popular frameworks in the internal formats used by the EMLlib</li>
+</ul>
+<p>The repository is structured as follows:</p>
+<ul class="simple">
+<li>The <cite>backend</cite> module contains all the available backends
+* The <cite>base</cite> submodule defines the interface that all backends should implement
+* The remaining submodules provide solver-specifc implementations of the base API</li>
+<li>The <cite>net</cite> and <cite>tree</cite> modules contains classes and functions to work respectively with Machhine Learning models, and in particular Neural Network and Decision Trees
+* The <cite>describe</cite> submodule contains classes and functions that are useful to <em>represent</em> ML models
+* The <cite>embed</cite> submodule contains classes and functions that are useful to <em>embed</em> ML models into a combinatorial model
+* The <cite>process</cite> submodule contains classes and functions that are useful to <em>pre- and post-process</em> ML models for use optimization
+* The <cite>reader</cite> submodule contains specific reader implementations</li>
+<li>The <cite>util</cite> module contains classes and functions used by multiple core EML objects</li>
+</ul>
+<p>The core EML library is implemented in pure Python (3.X) and relies on very few additional modules. However, for every practical task you will need to use at least one backend, and probably at least one reader.</p>
+<p>### Installing the Core EML API</p>
+<p>In order to have the core EML functionalities working you will need to:</p>
+<ul class="simple">
+<li>Obtain a Python 3.X distribution</li>
+<li>Install numpy, e.g. via pip with <cite>pip3 install numpy</cite></li>
+<li>Add the main folder of your repository to your python path. This can be done by setting the global <cite>PYTHONPATH</cite> variables to include the path to this repository</li>
+</ul>
+<p>We are planning to add a pip based installation in the coming months.</p>
+<p>### Installing the Keras Network Reader</p>
+<p>A reader for Neural Networks built with the [keras sequential API](???) is provided in <cite>net.reader.keras_reader</cite>.</p>
+<p>The reader itself does not require a specific installation, but you will need to install [keras](???) to make it work.</p>
+<p>### Installing the Sklearn Decision Tree Reader</p>
+<p>A reader for Decision Trees built with the [scikit-learn](???) is provided in <cite>tree.reader.sklearn_reader</cite>.</p>
+<p>The reader itself does not require a specific installation, but you will need to install [scikit-learn](???) to make it work.</p>
+<p>### Installing the Cplex Backend</p>
+<p>A backend for the [CPLEX Mixed Integer Linear Solver]() is provided in <cite>backend.cplex_backend</cite>.</p>
+<p>The backend itself does not require a specific installation, but you will need to install [docplex](???) to make it work.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Empirical Model Learning’s documentation!</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/readme.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Empirical Model Learning’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Empirical Model Learning  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, University of Bologna - DISI.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

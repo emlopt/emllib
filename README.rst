@@ -1,4 +1,6 @@
-# EMLlib - An Empirical Model Learning Library
+============================================
+EMLlib - An Empirical Model Learning Library
+============================================
 
 This repository contains an implementation of techniques related to [Empirical Model Learning](http://emlopt.github.io), a technique to enable Combinatorial Optimization and decision making over complex real-world systems. The method is based on the (relatively simple) idea of:
 

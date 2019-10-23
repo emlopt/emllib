@@ -69,15 +69,6 @@ class ModelDesc:
             Optimization model 
         name : string
             Name of the model 
-
-    IGNORE
-    # Examples
-    # --------
-        # In case of Decision Tree we might want to encode the path 
-        # in the model descriptor, in order to do so we use expr
-
-        # expr = {'path': [[1, 3, 4], [1, 5, 7], [1, 0]] }
-    IGNORE
     
     """
     def __init__(self, ml, mdl, name):
