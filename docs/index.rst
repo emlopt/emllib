@@ -10,7 +10,7 @@ Welcome to Empirical Model Learning's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   readme
+   introduction
 
 
 
