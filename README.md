@@ -1,6 +1,7 @@
-============================================
+
 EMLlib - An Empirical Model Learning Library
 ============================================
+
 
 This repository contains an implementation of techniques related to [Empirical Model Learning](http://emlopt.github.io), a technique to enable Combinatorial Optimization and decision making over complex real-world systems. The method is based on the (relatively simple) idea of:
 
@@ -21,7 +22,8 @@ The repository has been just launched and currently contains only a fraction of 
 
 The EMLlib is part of the EML resources (including the EML tutorial), all available at [http://emlopt.github.io](http://emlopt.github.io).
 
-## Structure and Installation
+Structure and Installation
+--------------------------
 
 In details, every object in the EMLlib belongs to one of three groups:
 
@@ -43,7 +45,8 @@ The repository is structured as follows:
 
 The core EML library is implemented in pure Python (3.X) and relies on very few additional modules. However, for every practical task you will need to use at least one backend, and probably at least one reader. 
 
-### Installing the Core EML API
+Installing the Core EML API
+---------------------------
 
 In order to have the core EML functionalities working you will need to:
 
@@ -53,20 +56,23 @@ In order to have the core EML functionalities working you will need to:
 
 We are planning to add a pip based installation in the coming months.
 
-### Installing the Keras Network Reader
+Installing the Keras Network Reader
+-----------------------------------
 
 A reader for Neural Networks built with the [keras sequential API](???) is provided in `net.reader.keras_reader`.
 
 The reader itself does not require a specific installation, but you will need to install [keras](???) to make it work.
 
-### Installing the Sklearn Decision Tree Reader
+Installing the Sklearn Decision Tree Reader
+-------------------------------------------
 
 A reader for Decision Trees built with the [scikit-learn](???) is provided in `tree.reader.sklearn_reader`.
 
 The reader itself does not require a specific installation, but you will need to install [scikit-learn](???) to make it work.
 
 
-### Installing the Cplex Backend
+Installing the Cplex Backend
+----------------------------
 
 A backend for the [CPLEX Mixed Integer Linear Solver]() is provided in `backend.cplex_backend`.
 
