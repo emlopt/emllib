@@ -3,19 +3,20 @@
 
 import os
 import sys
+import time
 import importlib
-import numpy as np
-import docplex.mp.model as cpx
+import sys
+import eml.backend.base as base
+from ortools.linear_solver import pywraplp
 
-from eml.backend import base
 
-class CplexBackend(base.Backend):
-    """ Backend for CPLEX solver
+class OrtoolsBackend(base.Backend):
+    """ Backend for ortools solver
 
     Attributes
     ---------
         _ml_tol  : float
-            Tollerance 
+            Tollerance
 
     Parameters
     ----------
@@ -23,103 +24,105 @@ class CplexBackend(base.Backend):
             Tollerance
 
     """
+
     def __init__(self, ml_tol=1e-4):
         self._ml_tol = ml_tol
-        super(CplexBackend, self).__init__()
+        super(OrtoolsBackend, self).__init__()
 
     def const_eps(self, mdl):
         """ Get tollerance
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
+            mdl : ortools solver
+                ortools model
 
         Returns
         -------
             Tollerance : float
-                Tollerance 
+                Tollerance
 
-        """ 
+        """
         return self._ml_tol
 
     def var_cont(self, mdl, lb, ub, name=None):
-        """ Creates continuous variable in the model 
-
-        Parameters
-        ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-            lb : float)
-                Lower bound of the variable 
-            ub :float
-                Upper bound of the variable 
-            name : string 
-                Name of the variable (default None)
-
-        Returns
-        -------
-            Continuos Variable : :obj:`docplex.mp.linear.Var``
-                Continuos variable with specified bounds and name
-
-        """
-        # Convert bounds in a cplex friendly format
-        # lb = lb if not np.isfinite(lb) else -mdl.infinity()
-        # ub = ub if not np.isfinite(ub) else mdl.infinity()
-        return mdl.continuous_var(lb=lb, ub=ub, name=name)
-
-    def var_bin(self, mdl, name=None):
         """ Creates continuous variable in the model
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
+            mdl : ortools solver
+                ortools model
+            lb : float)
+                Lower bound of the variable
+            ub :float
+                Upper bound of the variable
+            name : string
+                Name of the variable (default None)
+
+        Returns
+        -------
+            Continuos Variable : ortools continuous variable
+                Continuos variable with specified bounds and name
+
+        """
+        # Convert bounds in a ortools friendly format
+        lb = lb if lb != float('-inf') else -mdl.infinity()
+        ub = ub if ub != float('+inf') else mdl.infinity()
+        # Build the variable
+        return mdl.NumVar(lb=lb, ub=ub, name=name)
+
+    def var_bin(self, mdl, name=None):
+        """ Creates binary variable in the model
+
+        Parameters
+        ----------
+            mdl : ortools solver
+                ortools model
             name : string)
                 Name of the variable (default None)
 
         Returns
-        ------- 
-            Binary Variable : :obj:`docplex.mp.linear.Var``
+        -------
+            Binary Variable : ortools binary varible
                 Binary Variable
 
         """
-        return mdl.binary_var(name=name)
+        return mdl.IntVar(0, 1, name=name)
 
     def xpr_scalprod(self, mdl, coefs, terms):
         """ Scalar product of varibles and coefficients
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
+            mdl : ortools solver
+                ortools modek
             coefs : list(float)
-                List of coefficients 
-            terms : list(:obj:docplex.mp.linear.Var]): 
+                List of coefficients
+            terms : list(ortools var):
                 List of variables
 
         Returns
         -------
-            Linear Expression : :obj:`docplex.mp.LinearExpr()`
-                Linear expression representing the linear combination 
+            Linear Expression : ortools linear expression
+                Linear expression representing the linear combination
                 of terms and coefficients or 0
 
         """
         return sum(c * x for c, x in zip(coefs, terms))
 
     def xpr_sum(self, mld, terms):
-        """ Sum of variables 
+        """ Sum of variables
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-            terms : list(:obj:docplex.mp.linear.Var)
+            mdl : ortools solver
+                ortools model
+            terms : list(ortools variables)
                 List of variables
 
         Returns
         -------
-            Linear Expression : :obj:`docplex.mp.LinearExpr()`
+            Linear Expression : ortoools linear expression
                 Linear expression representing the sum of all
                 the term in input
 
@@ -131,18 +134,18 @@ class CplexBackend(base.Backend):
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-            left : :obj:docplex.mp.linear.Var
+            mdl : ortools solver
+                ortools model
+            left : ortools varaible
                 Variable
-            right : :obj:docplex.mp.linear.Var
+            right : ortools varaible
                 Variable
 
         Returns
         -------
-            Equality constraint : :obj:`docplex.mp.constr.LinearConstraint`
-                Equality contraint between the two variables in input 
-        
+            Equality constraint : ortools linear constraint
+                Equality contraint between the two variables in input
+
         """
         return left == right
 
@@ -151,46 +154,46 @@ class CplexBackend(base.Backend):
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-            left : :obj:docplex.mp.linear.Var
+            mdl : ortools solver
+                ortools model
+            left : ortools variable
                 Variable
-            right : :obj:docplex.mp.linear.Var
+            right : ortools variable
                 Variable
-            name : string 
-                Name of the constraint 
+            name : string
+                Name of the constraint
 
         Returns
         -------
-            Equality constraint : :obj:`docplex.mp.constr.LinearConstraint`
-                Equality contraint between the two variables in input 
+            Equality constraint : ortools linear constraint
+                Equality contraint between the two variables in input
 
 
         """
-        return mdl.add_constraint(left == right, ctname=name)
+        return mdl.Add(left == right, name=name)
 
     def cst_leq(self, mdl, left, right, name=None):
         """ Add to the model a lowe or equal constraint between two variables
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-            left : :obj:docplex.mp.linear.Var
+            mdl : ortools solver
+                ortools model
+            left : ortools variable
                 Variable
-            right : :obj:docplex.mp.linear.Var
+            right : ortools variable
                 Variable
-            name : string 
-                Name of the constraint 
+            name : string
+                Name of the constraint
 
         Returns
         -------
-            Lower or equal constraint : :obj:`docplex.mp.constr.LinearConstraint`
-                Lowe or equal contraint between the two variables in input 
+            Lower or equal constraint : ortools linear constraint
+                Lowe or equal contraint between the two variables in input
 
 
         """
-        return mdl.add_constraint(left <= right, ctname=name)
+        return mdl.Add(left <= right, name=name)
 
     def cst_indicator(self, mdl, trigger, val, cst, name=None):
         """ Add an indicator to the model
@@ -200,57 +203,64 @@ class CplexBackend(base.Backend):
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-            trigger : :obj:`docplex.mp.Var`
-                Binary Variable 
+            mdl : ortools model
+                ortools model
+            trigger : threshold
+                numerical value (float or int)
             val : int
                 Active value, used to trigger the satisfaction
                 of the constraint
-            cst : :obj:`docplex.mp.constr.LinearConstraint`
-                Linear constraint 
-            name : string 
-                Name of the constraint 
+            cst : ortools linear constraint
+                Linear constraint
+            name : string
+                Name of the constraint
 
         Returns
         -------
-            Indicator constraint : :obj:`docplex.mp.constr.IndicatorConstraint`
+            Indicator constraint : ortools indicator variable
                 Indicator constraint between the trigger and the linear
                 constraint in input
 
-        """ 
-        return mdl.add_indicator(trigger, cst, val, name=name)
-
-    def get_obj(self, mdl):
-        """ Returns objextive expression 
-
-        Parameters
-        ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-
-        Returns
-        -------
-            Objective and expression : (string, )
-                'min' if the objective function is to be minimized,
-                'max otherwise. 
-                The expression repesenting the objective function
-
         """
-        sense = 'min' if mdl.is_minimized() else 'max'
-        xpr = mdl.get_objective_expr()
-        return sense, xpr
+        operator = str(cst).split(' ')[1]
+        tr_val = 0
+        if operator == '==' and val == cst:
+            tr_val = 1
+        mdl.Add(trigger == tr_val)
+        if operator == '<=' and val <= cst:
+            tr_val = 1
+        mdl.Add(trigger <= tr_val)
+
+    # def get_obj(self, mdl):
+    #     """ Returns objextive expression
+    #
+    #     Parameters
+    #     ----------
+    #         mdl : ortools solver
+    #             ortools model
+    #
+    #     Returns
+    #     -------
+    #         Objective and expression : (string, )
+    #             'min' if the objective function is to be minimized,
+    #             'max otherwise.
+    #             The expression repesenting the objective function
+    #
+    #     """
+    #     sense = 'min' if mdl.is_minimized() else 'max'
+    #     xpr = mdl.get_objective_expr()
+    #     return sense, xpr
 
     def set_obj(self, mdl, sense, xpr):
-        """ Sets the objective function 
+        """ Sets the objective function
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model 
-            sense : string 
+            mdl : ortools solver
+                ortools model
+            sense : string
                 Represents the objective, 'min' or 'max'
-            xpr : 
+            xpr :
                 Expression representing the objective function
 
         Returns
@@ -258,33 +268,38 @@ class CplexBackend(base.Backend):
             None
 
         """
-        mdl.set_objective(sense, xpr)
+        assert sense in ['min', 'max']
+        if sense == 'min':
+            mdl.Minimize(xpr)
+        else:
+            mdl.Maximize(xpr)
 
     def solve(self, mdl, timelimit):
         """ Solves the problem
 
         Parameters
         -----------
-            mdl : :obj:`docplex.mp.model.Model`
-                            Cplex model 
+            mdl : ortools solver
+                ortools model
             timelimit : int
                 time limit in seconds for the solver
 
         Returns
         -------
-            Solution : :obj:`docplex.mp.solution.SolveSolution`
+            Solution : dict
                 A solution if the problem is feasible, the status of the
                 of the solver otherwise
 
         """
-        mdl.set_time_limit(max(1, timelimit))
-        res = mdl.solve()
-        stime = mdl.solve_details.time
-        status = 'infeasible' if res is None else res.solve_details.status
-        obj = None if res is None else res.objective_value
-        bound = mdl.solve_details.best_bound
-        lres = {'status':status, 'obj': obj, 'bound': bound,
-                'time': stime}
+        mdl.SetTimeLimit(max(1, timelimit))
+        t0 = time.time()
+        mdl.Solve()
+        t1 = time.time()
+        stime = t1 - t0
+        status = 'infeasible' if mdl.OPTIMAL is None else 'solved'
+        obj = mdl.Objective().Value()
+        # bound = mdl.solve_details.best_bound
+        lres = {'status': status, 'obj': obj, 'time': stime}
         return lres
 
     # def add_neuron(self, neuron, **args):
@@ -347,7 +362,6 @@ class CplexBackend(base.Backend):
     #             mdl.add_constraint(x == y, ctname='%s_l%s' % (self._name, str(idx)))
     #         else:
     #             raise ValueError('Unsupported "%s" activation function' % act)
-
 
     # def neuron_bounds(self, neuron, timelimit=None, verbose=0, **args):
     #     super(CplexBackend, self).neuron_bounds(neuron)
@@ -419,28 +433,26 @@ class CplexBackend(base.Backend):
     #     return ttime, bchg
 
     def new_model(self, mdl=None, name=None):
-        """ Creates a new model 
+        """ Creates a new model
 
         Parameters
         ----------
-            mdl : :obj:`docplex.mp.model.Model`
-                Cplex model (default None)
+            mdl : ortools solver
+                ortools model (default None)
             name : string
                 Name of the model (default None)
 
         Returns
         -------
-            Model : :obj:`docplex.mp.model.Model`
-                Cplex model
+            Model : ortools solver
+                ortools model
 
         """
-        return cpx.Model()
+        return pywraplp.Solver(name if name else 'milp_model', pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
-    
     # def update_lb():
 
     # def update_ub():
-        
 
     # def set_model(self, mdl=None):
     #     # Clear the current model (if owned)
@@ -466,32 +478,32 @@ class CplexBackend(base.Backend):
     #         mdl.end()
 
 
-def model_to_string(mdl):
-    """ Returns a string representing the model
-    
-    Parameters
-    ---------- 
-        mdl : :obj:`docplex.mp.model.Model`
-            Cplex model
-
-    Returns
-    -------
-        Representation : string
-            String representig the cplex model 
-
-    """
-    s = ''
-    # Print objective
-    if mdl.is_minimized():
-        s += 'minimized: %s\n' % mdl.get_objective_expr()
-    else:
-        s += 'maximized: %s\n' % mdl.get_objective_expr()
-    # Print all constraints
-    s += 'subject to:\n'
-    for cst in mdl.iter_constraints():
-        s += '\t%s\n' % str(cst)
-    # Print all variables
-    s += 'with vars:\n'
-    for var in mdl.iter_variables():
-        s += '\t%f <= %s <= %f\n' % (var.lb, str(var), var.ub)
-    return s
+# def model_to_string(mdl):
+#     """ Returns a string representing the model
+#
+#     Parameters
+#     ----------
+#         mdl : :obj:`docplex.mp.model.Model`
+#             Cplex model
+#
+#     Returns
+#     -------
+#         Representation : string
+#             String representig the cplex model
+#
+#     """
+#     s = ''
+#     # Print objective
+#     if mdl.is_minimized():
+#         s += 'minimized: %s\n' % mdl.get_objective_expr()
+#     else:
+#         s += 'maximized: %s\n' % mdl.get_objective_expr()
+#     # Print all constraints
+#     s += 'subject to:\n'
+#     for cst in mdl.iter_constraints():
+#         s += '\t%s\n' % str(cst)
+#     # Print all variables
+#     s += 'with vars:\n'
+#     for var in mdl.iter_variables():
+#         s += '\t%f <= %s <= %f\n' % (var.lb, str(var), var.ub)
+#     return s

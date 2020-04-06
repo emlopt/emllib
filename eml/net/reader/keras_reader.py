@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import numpy as np
-import keras.models as kmodels
+import keras
 import keras.layers as klayers
 
 from eml.net import describe
+
 
 # import importlib
 
@@ -55,7 +53,8 @@ def read_keras_sequential(kmodel):
             act = klayer.get_config()['activation']
             layer = describe.DNRDense(wgt, bias, act)
             net.add(layer)
-        else:
+        elif klayer.__class__ != keras.engine.input_layer.InputLayer:
+            print(klayer.__class__)
             raise ValueError('Unsupported layer type')
     # Return the network
     return net
