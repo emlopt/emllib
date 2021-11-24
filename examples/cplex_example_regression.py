@@ -2,12 +2,14 @@
 import os
 import numpy as np
 
-from keras import backend as K
-from keras import Model
-from keras.layers import Input, Dense
-from keras.models import model_from_json
+from tensorflow.keras import backend as K
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import model_from_json
+from tensorflow.keras.callbacks import EarlyStopping
 
 import docplex.mp.model as cpx
+
 from eml.net.embed import encode
 from eml.backend import cplex_backend
 from eml.net.reader import keras_reader
@@ -26,14 +28,11 @@ class SimpleModelBuilder(object):
         self.width = width
 
     def build_model(self):
-        # Build a simple neural model
-        inp = Input(shape=(self.ninput,))
-        tmp = inp
+        model = Sequential()
+        model.add(Dense(1, activation='relu', input_shape=(self.ninput,)))
         for i in range(self.hlayers):
-            tmp = Dense(self.width, activation='relu')(tmp)
-        out = Dense(1, activation=self.actfun)(tmp)
-        model = Model(inp, out)
-        # Return the model
+            model.add(Dense(self.width, activation='relu'))
+        model.add(Dense(1, activation=actfun))
         return model
 
 ninput = 2
@@ -41,7 +40,7 @@ nsamples = 3000
 nsamples_test = 1000
 width = 8
 hlayers = 4
-actfun = K.relu
+actfun = 'linear'
 batch_size = 256
 epochs = 200
 seed = 42
@@ -50,10 +49,10 @@ np.random.seed(seed)
 
 # creating dataset for training
 X = np.random.rand(nsamples, ninput)
-y = np.random.rand(nsamples)
+y = (X[:,0] * X[:,1])**2
 # creating dataset for test
 Xt = np.random.rand(nsamples_test, ninput)
-yt = np.random.rand(nsamples_test)
+yt = (Xt[:,0] * Xt[:,1])**2
 
 # create model
 model = SimpleModelBuilder(ninput, actfun, hlayers, width)
@@ -62,7 +61,8 @@ model.compile(loss='mse', optimizer='adam')
 
 
 # train model
-model.fit(x=X, y=y, batch_size=batch_size, epochs=epochs, verbose=1)
+callbacks = [EarlyStopping(monitor='val_loss', patience=5)]
+model.fit(x=X, y=y, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=callbacks)
 
 # test model
 eval = model.evaluate(x=Xt, y=yt, batch_size=batch_size, verbose=1)

@@ -1,4 +1,4 @@
-# folders 
+# folders
 __pycache__/
 dist/
 build/
@@ -10,5 +10,7 @@ test_*.py
 *.pyc
 .DS_Store
 
+*.json
+*.h5
 
 

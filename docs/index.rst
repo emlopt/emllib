@@ -11,6 +11,7 @@ Welcome to Empirical Model Learning's documentation!
    :caption: Contents:
 
    introduction
+   example
 
 
 
