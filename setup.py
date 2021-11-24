@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="emllib",
-    version="0.0.3",
+    version="1.0.0",
     maintainer="Federico Baldo",
     maintainer_email="federico.baldo2@unibo.it",
     author="University of Bologna - DISI",
