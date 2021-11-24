@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="emllib",
-    version="1.0.0",
+    version="1.0.1",
     maintainer="Federico Baldo",
     maintainer_email="federico.baldo2@unibo.it",
     author="University of Bologna - DISI",
@@ -14,13 +14,13 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/emlopt/emllib",
     packages=setuptools.find_packages(),
-    classifiers=[
-        "Empirical Model Learning",
-        "Machine Learning",
-        "Artificial Intelligence",
-        "Optimization Problem",
-        "Combinatorial Problem",
-        "Constraint Programming"
-    ],
+    # classifiers=[
+    #     "Empirical Model Learning",
+    #     "Machine Learning",
+    #     "Artificial Intelligence",
+    #     "Optimization Problem",
+    #     "Combinatorial Problem",
+    #     "Constraint Programming"
+    # ],
     python_requires='>=3.6',
 )

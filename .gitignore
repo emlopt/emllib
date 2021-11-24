@@ -13,5 +13,8 @@ test_*.py
 
 *.json
 *.h5
+*.whl
+*.egg
+*.tar.gz
 
 
