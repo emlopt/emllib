@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import numpy as np
-import keras.models as kmodels
-import keras.layers as klayers
+import tensorflow.keras
+import tensorflow.keras.layers as klayers
 
 from eml.net import describe
+
 
 # import importlib
 
@@ -28,7 +26,7 @@ def read_keras_sequential(kmodel):
 
     Parameters
     ----------
-        kmodel : obj:`keras.models.Sequential` 
+        kmodel : obj:`keras.models.Sequential`
             Trained keras neural network
 
     Returns
@@ -41,7 +39,7 @@ def read_keras_sequential(kmodel):
         ValueError
             If the layer type is not supported
 
-    """ 
+    """
     # Build a DNR network model
     net = describe.DNRNet()
     # Add input layer
@@ -55,7 +53,8 @@ def read_keras_sequential(kmodel):
             act = klayer.get_config()['activation']
             layer = describe.DNRDense(wgt, bias, act)
             net.add(layer)
-        else:
+        elif klayer.__class__ != tensorflow.keras.layers.InputLayer:
+            print(klayer.__class__)
             raise ValueError('Unsupported layer type')
     # Return the network
     return net

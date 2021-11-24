@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import numpy as np
-
 # # Add the necessary paths
 # path = os.path.abspath(os.path.dirname(__file__))
 # if not path in sys.path:
@@ -14,8 +10,8 @@ import numpy as np
 # importlib.reload(describe)
 
 from eml import util
-from eml.net import describe
-from eml.net import embed
+from eml.net import describe, embed
+
 
 # ============================================================================
 # Fast bounds via Interval Based Reasoning

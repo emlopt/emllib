@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import numpy as np
-
 # # Add the necessary paths
 # path = os.path.abspath(os.path.dirname(__file__))
 # if not path in sys.path:
@@ -13,9 +9,10 @@ import numpy as np
 # import describe
 # importlib.reload(describe)
 
-from eml.net import describe, process
+from eml.net import process, describe
 from eml import util
 
+import docplex.mp.linear as cpx_lin
 import importlib
 importlib.reload(describe)
 importlib.reload(util)
@@ -105,8 +102,14 @@ def encode(bkd, net, mdl, net_in, net_out, name, verbose=0):
     in_layer = net.layer(0)
     neurons = list(in_layer.neurons())
     for i, var in enumerate(net_in):
-        neurons[i].update_lb(var.lb)  
-        neurons[i].update_ub(var.ub)  
+        if var.__class__ == cpx_lin.Var:
+            lb = var.lb
+            ub = var.ub
+        else:
+            lb = var.lb()
+            ub = var.ub()
+        neurons[i].update_lb(lb)
+        neurons[i].update_ub(ub)
     process.ibr_bounds(net)
     # Return the network descriptor
     return desc

@@ -338,7 +338,8 @@ class DNRNeuron(object):
                 False otherwise
 
         """
-        if self.layer_.lb_[self.idx_] < value-tol:
+
+        if self.layer_.lb_[self.idx_] < value - tol:
             self.layer_.lb_[self.idx_] = value
             return True
         return False
@@ -658,7 +659,7 @@ class DNRActNeuron(DNRNeuron):
             return True
         return False
 
-    def weight(self):
+    def weights(self):
         """ Get the weight associated to the neuron 
 
         Returns

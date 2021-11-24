@@ -16,4 +16,5 @@ sklearn==0.0
 tensorboard==2.0.0
 tensorflow==2.0.0
 tensorflow-estimator==2.0.0
-
+ortools==9.1.9490
+h5py==2.10.0
