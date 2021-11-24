@@ -98,7 +98,7 @@ In order to use EMLlib you need:
 * Install EMLlib typing the following command in the terminal:
     .. code-block:: python
 
-        pip install  emllib
+        pip install emllib
 
 * Then you can easily use all the library functions described previously by typing in your python file:
     .. code-block:: python
