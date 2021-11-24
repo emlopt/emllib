@@ -6,7 +6,7 @@ We assume to have an artificial dataset such that:
 
 .. math::
     X = (x_0, x_1) \\
-    f(x_0, x_1) = (x_0 * x_1)^2
+    f(x_0, x_1) = (x_0 \cdot x_1)^2
 
 Which can be generated as follows:
 
@@ -28,7 +28,7 @@ Assuming that the form of the function :math:`f` \is unknown, we want to solve t
 
 .. math::
     maximize_{x_0, x_1, y}~~x_0 + x_1 + f(x_0, x_1) \\
-    x_0 \leq 0.2 * x_1
+    x_0 \leq 0.2 \cdot x_1
     \\
     x_0 + x_1 + f(x_0, x_1) \leq 1 \\
 

@@ -4,6 +4,7 @@ dist/
 build/
 _build/
 emllib.egg-info/
+.idea/
 
 # files
 test_*.py
