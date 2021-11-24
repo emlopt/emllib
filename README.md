@@ -24,8 +24,6 @@ The EMLlib is part of the EML resources (including the EML tutorial), all availa
 
 Installation
 ------------
-
-  .. code-block:: python
     
     pip install emllib
     
