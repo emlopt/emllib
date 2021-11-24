@@ -22,8 +22,15 @@ The repository has been just launched and currently contains only a fraction of 
 
 The EMLlib is part of the EML resources (including the EML tutorial), all available at [http://emlopt.github.io](http://emlopt.github.io).
 
-Structure and Installation
---------------------------
+Installation
+------------
+
+  .. code-block:: python
+    
+    pip install emllib
+    
+Structure 
+----------
 
 In details, every object in the EMLlib belongs to one of three groups:
 
