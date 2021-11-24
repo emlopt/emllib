@@ -78,3 +78,8 @@ A backend for the [CPLEX Mixed Integer Linear Solver]() is provided in `backend.
 
 The backend itself does not require a specific installation, but you will need to install [docplex](???) to make it work.
 
+Documentation
+-------------
+
+https://emlopt-doc.readthedocs.io/en/latest/#
+
