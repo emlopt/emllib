@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 
@@ -10,6 +9,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 import eml.backend.ortool_backend as ortools_backend
 from eml.net.embed import encode
+from eml.net.process import ibr_bounds
 from eml.net.reader import keras_reader
 
 
@@ -59,7 +59,7 @@ model.compile(loss='mse', optimizer='adam')
 
 # train model
 callbacks = [EarlyStopping(monitor='val_loss', patience=5)]
-model.fit(x=X, y=y, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=callbacks)
+model.fit(x=X, y=y, batch_size=batch_size, epochs=epochs, verbose=1, validation_split=0.2, callbacks=callbacks)
 
 # test model
 eval = model.evaluate(x=Xt, y=yt, batch_size=batch_size, verbose=1)
@@ -71,8 +71,7 @@ with open('nn_reg.json', 'w') as f:
     f.write(model.to_json())
 
 # build optimization problem
-
-def laod_keras_net():
+def load_keras_net():
     with open('nn_reg.json') as f:
         knet = model = model_from_json(f.read())
     wgt_fname = os.path.join('nn_reg.h5')
@@ -86,13 +85,18 @@ def convert_keras_net(knet):
 bkd = ortools_backend.OrtoolsBackend()
 mdl = bkd.new_model()
 
-knet = laod_keras_net()
+knet = load_keras_net()
 net = convert_keras_net(knet)
 
 # create variables
 X0_var = mdl.NumVar(lb=0, ub=1, name='in_var0')
 X1_var = mdl.NumVar(lb=0, ub=1, name='in_var1')
 Y_var = mdl.NumVar(lb=0, ub=1, name='out_var')
+
+# Propagate bouns
+net.layer(0).update_lb(np.array([0, 0]))
+net.layer(0).update_ub(np.array([1, 1]))
+ibr_bounds(net)
 
 # encode model
 encode(bkd, net, mdl, [X0_var, X1_var], Y_var, 'net_econding')
@@ -118,3 +122,9 @@ else:
     print('X1: {}'.format(X1_var.solution_value()))
     print('Y: {}'.format(Y_var.solution_value()))
     print('Cost: {}'.format(sol['obj']))
+    
+    knet_in = [[X0_var.solution_value(), X1_var.solution_value()]]
+    knet_out = knet.predict(knet_in)[0][0]
+    print('Original network prediction: {}'.format(knet_out))
+
+

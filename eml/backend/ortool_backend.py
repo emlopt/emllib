@@ -149,6 +149,26 @@ class OrtoolsBackend(base.Backend):
         """
         return left == right
 
+    def xpr_leq(self, mdl, left, right):
+        """ Creates an inequality constraint between two variables
+
+        Parameters
+        ----------
+            mdl : ortools solver
+                ortools model
+            left : ortools varaible
+                Variable
+            right : ortools varaible
+                Variable
+
+        Returns
+        -------
+            Inequality constraint : ortools linear constraint
+                Inequality contraint between the two variables in input
+
+        """
+        return left <= right
+
     def cst_eq(self, mdl, left, right, name=None):
         """ Add to the model equality constraint between two variables
 
@@ -222,14 +242,49 @@ class OrtoolsBackend(base.Backend):
                 constraint in input
 
         """
-        operator = str(cst).split(' ')[1]
-        tr_val = 0
-        if operator == '==' and val == cst:
-            tr_val = 1
-        mdl.Add(trigger == tr_val)
-        if operator == '<=' and val <= cst:
-            tr_val = 1
-        mdl.Add(trigger <= tr_val)
+        if val not in (0,1):
+            raise ValueError("val must be 0 or 1 in an indicator constraint")
+
+        # Extract information from the constraint
+        clb = cst._LinearConstraint__lb
+        cub = cst._LinearConstraint__ub
+        xpr = cst._LinearConstraint__expr
+        # Obtain bounds for the variables in the constraint
+        coeffs, xvars, xlb, xub = [], [], [], []
+        Ml, Mu = 0, 0
+        for x, c in xpr.GetCoeffs().items():
+            coeffs.append(c) # store the coefficient
+            xvars.append(x) # store the variable
+            xlb.append(x.lb()) # store the variable lb
+            xub.append(x.ub()) # store the variable ub
+            # Sanity check
+            invalid = (mdl.infinity(),mdl.infinity())
+            if x.lb() in invalid or x.ub() in invalid:
+                es = f'Infinite bounds detected for variable {str(x)}. '
+                es += 'The or-tools backend cannot handle ReLU activation '
+                es += 'functions unless bounds are pre-computed. You can '
+                es += 'use the net.process.ibr_bounds method to propagate '
+                es += 'network input bounds and get rid of this error.'
+                raise ValueError(es)
+            # Add a term to the global bounds
+            if c >= 0:
+                Ml += c * x.lb()
+                Mu += c * x.ub()
+            else:
+                Ml += c * x.ub()
+                Mu += c * x.lb()
+
+        # Linearize the indicator constraint
+        if val == 0:
+            if cub != float('inf'):
+                mdl.Add(xpr <= cub + trigger * (Mu - cub))
+            if clb != -float('inf'):
+                mdl.Add(xpr >= clb + trigger * (Ml - clb))
+        else:
+            if cub != float('inf'):
+                mdl.Add(xpr <= cub + (1-trigger) * (Mu - cub))
+            if clb != -float('inf'):
+                mdl.Add(xpr >= clb + (1-trigger) * (Ml - clb))
 
     # def get_obj(self, mdl):
     #     """ Returns objextive expression

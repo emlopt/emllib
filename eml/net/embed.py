@@ -102,6 +102,8 @@ def encode(bkd, net, mdl, net_in, net_out, name, verbose=0):
     in_layer = net.layer(0)
     neurons = list(in_layer.neurons())
     for i, var in enumerate(net_in):
+        # TODO wrap access to variables bounds in the back-end
+        # That will enable removing docplex from the depenedencies
         if var.__class__ == cpx_lin.Var:
             lb = var.lb
             ub = var.ub
@@ -142,23 +144,24 @@ def _add_neuron(bkd, desc, neuron, x=None):
     #     desc._neurons.add(neuron.idx())
     # else:
     #     raise ValueError('The neuron has been already added')
-    # Obtain current bounds
-    lb, ub = neuron.lb(), neuron.ub()
     # Obtain network name and inner model
     sn, mdl = desc.name(), desc.model()
-    # --------------------------------------------------------------------
-    # Build a variable for the model output
-    # --------------------------------------------------------------------
+    # Obtain current neuron output bounds
+    lb, ub = neuron.lb(), neuron.ub()
+    # Obtain the neuron index
     idx = neuron.idx()
-    if x is None:
-        x = bkd.var_cont(mdl, lb, ub, '%s_x%s' % (sn, str(idx)))
-    desc.store('x', idx, x)
     # --------------------------------------------------------------------
     # Check whether this is a neuron with an activation function
     # --------------------------------------------------------------------
     net = neuron.network()
     sn = desc.name()
-    if issubclass(neuron.__class__, describe.DNRActNeuron):
+    if not issubclass(neuron.__class__, describe.DNRActNeuron):
+        # Build a variable for the model output
+        # NOTE this code is duplicated to handle act. dependent bounds
+        if x is None:
+            x = bkd.var_cont(mdl, lb, ub, '%s_x%s' % (sn, str(idx)))
+        desc.store('x', idx, x)
+    else:
         # Build an expression for the neuron activation
         coefs, yterms = [1], [neuron.bias()]
         for pidx, wgt in zip(neuron.connected(), neuron.weights()):
@@ -174,6 +177,11 @@ def _add_neuron(bkd, desc, neuron, x=None):
         # ----------------------------------------------------------------
         act = neuron.activation()
         if act == 'relu': 
+            # Build a variable for the model output
+            if x is None:
+                x = bkd.var_cont(mdl, max(0, lb), ub, '%s_x%s' % (sn, str(idx)))
+            desc.store('x', idx, x)
+            # Obtain neuron bounds
             ylb, yub = neuron.ylb(), neuron.yub()
             # Trivial case 1: the neuron is always active
             if ylb >= 0:
@@ -185,8 +193,8 @@ def _add_neuron(bkd, desc, neuron, x=None):
             else:
                 # Enfore the natural bound on the neuron output
                 # NOTE if interval based reasoning has been used to
-                # compute bounds, this will be always redundant
-                x.lb = max(0, lb)
+                # # compute bounds, this will be always redundant
+                # x.lb = max(0, lb)
                 # Introduce a binary activation variable
                 z = bkd.var_bin(mdl, '%s_z%s' % (sn, str(idx)))
                 desc.store('z', idx, z)
@@ -197,11 +205,16 @@ def _add_neuron(bkd, desc, neuron, x=None):
                 left = bkd.xpr_scalprod(mdl, [1, -1], [x, s])
                 bkd.cst_eq(mdl, left, y, '%s_r0%s' % (sn, str(idx)))
                 # Build indicator constraints
-                right = bkd.xpr_eq(mdl, s, 0)
+                right = bkd.xpr_leq(mdl, s, 0)
                 bkd.cst_indicator(mdl, z, 1, right, '%s_r1%s' % (sn, str(idx)))
-                right = bkd.xpr_eq(mdl, x, 0)
+                right = bkd.xpr_leq(mdl, x, 0)
                 bkd.cst_indicator(mdl, z, 0, right, '%s_r2%s' % (sn, str(idx)))
         elif act == 'linear':
+            # Build a variable for the model output
+            if x is None:
+                x = bkd.var_cont(mdl, lb, ub, '%s_x%s' % (sn, str(idx)))
+            desc.store('x', idx, x)
+            # Chain the output variable to the neuron activation
             bkd.cst_eq(mdl, x, y, '%s_l%s' % (sn, str(idx)))
         else:
             raise ValueError('Unsupported "%s" activation function' % act)

@@ -146,6 +146,26 @@ class CplexBackend(base.Backend):
         """
         return left == right
 
+    def xpr_leq(self, mdl, left, right):
+        """ Creates an inequality constraint between two variables
+
+        Parameters
+        ----------
+            mdl : :obj:`docplex.mp.model.Model`
+                Cplex model 
+            left : :obj:docplex.mp.linear.Var
+                Variable
+            right : :obj:docplex.mp.linear.Var
+                Variable
+
+        Returns
+        -------
+            Inequality constraint : :obj:`docplex.mp.constr.LinearConstraint`
+                Inequality contraint between the two variables in input 
+        
+        """
+        return left <= right
+
     def cst_eq(self, mdl, left, right, name=None):
         """ Add to the model equality constraint between two variables
 
